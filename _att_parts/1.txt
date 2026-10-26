@@ -1,0 +1,50 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Banner, Empty, Field, Modal, PageHeader } from "@/components/ui";
+import { api, ApiError } from "@/lib/api";
+import { useSession } from "@/lib/auth";
+import { clock, todayInput } from "@/lib/format";
+import { Term, useText } from "@/lib/i18n";
+import { Row } from "@/lib/types";
+
+function timeInputValue(value?: string | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    const match = String(value).match(/(\d{2}:\d{2})/);
+    return match ? match[1] : "";
+  }
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
+type EditState = { mode: "one" | "bulk"; employeeIds: number[]; clock_in: string; clock_out: string; name?: string };
+
+export default function AttendancePage() {
+  const { t } = useText();
+  const { has, me, options } = useSession();
+  const canWrite = has("employees.write");
+  const [day, setDay] = useState(todayInput);
+  const [unitId, setUnitId] = useState("");
+  const [rows, setRows] = useState<Row[]>([]);
+  const [selected, setSelected] = useState<number[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [edit, setEdit] = useState<EditState | null>(null);
+
+  async function reload(nextDay = day, nextUnit = unitId) {
+    const params = new URLSearchParams({ work_date: nextDay });
+    if (nextUnit) params.set("unit_id", nextUnit);
+    const result = await api<{ items: Row[] }>(`/employees/attendance?${params.toString()}`);
+    setRows(result.items);
+    setSelected([]);
+  }
+
+  useEffect(() => {
+    reload().catch((err) => setError(err instanceof ApiError ? err.message : "Could not load attendance"));
+  }, []);
+
+  const allSelected = rows.length > 0 && rows.every((row) => selected.includes(row.employee_id));
+  const openDay = day === todayInput();
