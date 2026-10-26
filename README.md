@@ -35,7 +35,7 @@ On Linux or macOS, activate the venv with `source .venv/bin/activate` and use `p
 
 ## Offline copy
 
-The app does not call the internet while it is running. Fonts are files in `frontend/src/fonts`. Python packages are installed inside `runtime/python`, and Node.js is in `runtime/node`. Frontend packages are already in `frontend/node_modules`.
+Fonts are files in `frontend/src/fonts`. Python packages are installed inside `runtime/python`, and Node.js is in `runtime/node`. Frontend packages are already in `frontend/node_modules`.
 
 Copy the whole folder onto the other Windows PC. Keep these directories in the copy:
 
